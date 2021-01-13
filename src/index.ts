@@ -71,7 +71,7 @@ function run(): void {
         const parentMessageId = (<any>ctx.message.reply_to_message).message_id;
         const videoUrls = findUrls(parentText);
         videoUrls.forEach((videoUrl) => {
-          const caption = `Video download requested was by ${ctx.message.from.username}.`;
+          const caption = `Video download was requested by ${ctx.message.from.username}.`;
           dowloadVideo(videoUrl)
             .then((videoPath) => {
               ctx.replyWithVideo(
