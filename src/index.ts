@@ -21,7 +21,7 @@ function dowloadVideo(videoUrl: string): Promise<string> {
     const random = Math.floor(Math.random() * Math.floor(1000000));
 
     exec(
-      `youtube-dl --embed-thumbnail -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4' --output='tmp/${random}.mp4' ${videoUrl}`,
+      `youtube-dl -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4' --output='tmp/${random}.mp4' ${videoUrl}`,
       (error, stdout, stderr) => {
         if (error) {
           reject(`error: ${error.message}`);
