@@ -3,3 +3,5 @@ tmp
 dist
 .env
 yarn-error.log
+prisma/*.db
+config/

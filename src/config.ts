@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+
 dotenv.config();
 
 import convict from "convict";
@@ -9,10 +10,10 @@ export const config = convict({
     format: "String",
     env: "BRAZAUSKAS_APP_NAME",
   },
-  dryRun: {
-    default: false,
-    format: "Boolean",
-    env: "BRAZAUSKAS_DRY_RUN",
+  port: {
+    default: 3000,
+    format: "int",
+    env: "BRAZAUSKAS_WEB_PORT",
   },
   telegramBotToken: {
     doc: "Telegram bot token",
