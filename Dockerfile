@@ -1,4 +1,4 @@
-FROM mikenye/youtube-dl:2021.04.01
+FROM mikenye/youtube-dl:2021.04.07
 
 WORKDIR /bot
 

@@ -1,16 +1,18 @@
 import { exec } from "child_process";
 import { readFileSync } from "fs";
 import { Telegraf } from "telegraf";
+import { config } from "./config";
+import { logger } from "./logger";
 
 function findUrls(message: string): string[] {
   if (!message) return [];
   const parts = message.split(" ");
-  console.log(parts);
+  logger.info(parts);
   return parts.filter((potentialUrl) => {
     try {
       return new URL(potentialUrl).toString() === potentialUrl;
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       return false;
     }
   });
@@ -31,7 +33,7 @@ function dowloadVideo(videoUrl: string): Promise<string> {
           reject(`stderr: ${stderr}`);
           return;
         }
-        console.info(stdout);
+        logger.info(stdout);
         resolve(`./tmp/${random}.mp4`);
       }
     );
@@ -43,12 +45,16 @@ function addCommands(bot: Telegraf): void {
     videoUrls.forEach((videoUrl) => {
       dowloadVideo(videoUrl)
         .then((videoPath) => {
-          ctx.replyWithVideo({
-            source: readFileSync(videoPath),
-          });
+          if (config.get("dryRun")) {
+            logger.info("reply not sent (dry run)");
+          } else {
+            ctx.replyWithVideo({
+              source: readFileSync(videoPath),
+            });
+          }
         })
         .catch((reason) => {
-          console.error(`FAILED VIDEO DOWNLOAD ${videoUrl}: ${reason}`);
+          logger.error(`FAILED VIDEO DOWNLOAD ${videoUrl}: ${reason}`);
         });
     });
 
@@ -59,8 +65,8 @@ function addCommands(bot: Telegraf): void {
 }
 
 function run(): void {
-  console.info("Starting CN- bot!");
-  const bot = new Telegraf(process.env.BOT_TOKEN ?? "");
+  logger.info("Starting CN- bot!");
+  const bot = new Telegraf(config.get("telegramBotToken")!);
 
   addCommands(bot);
 
@@ -74,18 +80,22 @@ function run(): void {
           const caption = `Video download was requested by ${ctx.message.from.username}.`;
           dowloadVideo(videoUrl)
             .then((videoPath) => {
-              ctx.replyWithVideo(
-                {
-                  source: readFileSync(videoPath),
-                },
-                {
-                  caption,
-                  reply_to_message_id: parentMessageId,
-                }
-              );
+              if (config.get("dryRun")) {
+                logger.info("reply not sent (dry run)");
+              } else {
+                ctx.replyWithVideo(
+                  {
+                    source: readFileSync(videoPath),
+                  },
+                  {
+                    caption,
+                    reply_to_message_id: parentMessageId,
+                  }
+                );
+              }
             })
             .catch((reason) => {
-              console.error(`FAILED VIDEO DOWNLOAD ${videoUrl}: ${reason}`);
+              logger.error(`FAILED VIDEO DOWNLOAD ${videoUrl}: ${reason}`);
             });
         });
         if (videoUrls.length > 0) {
