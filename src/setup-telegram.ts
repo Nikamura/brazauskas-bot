@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
 import { Telegraf } from "telegraf";
+import { config } from "./config";
 import { dowloadVideo } from "./dowloadVideo";
 import { findUrls } from "./findUrls";
 import { Service } from "./interfaces/common.interface";
@@ -41,8 +42,9 @@ export async function setupTelegram({ service: bot, db }: Service<Telegraf>) {
       const videoUrls = findUrls(messageText);
       if (videoUrls.length > 0) {
         for await (const videoUrl of videoUrls) {
-          const videoPath = await dowloadVideo(videoUrl);
           try {
+            await ctx.deleteMessage();
+            const videoPath = await dowloadVideo(videoUrl);
             await db.download.create({
               data: {
                 url: videoUrl,
@@ -57,19 +59,34 @@ export async function setupTelegram({ service: bot, db }: Service<Telegraf>) {
                 caption: `${videoUrl} was requested by ${ctx.message.from.username}.`,
               }
             );
-            await ctx.deleteMessage();
           } catch (err) {
+            const failureReason =
+              typeof err === "string" ? err : JSON.stringify(err);
             await db.download.create({
               data: {
                 url: videoUrl,
                 status: "failed",
-                failureReason: err.message,
+                failureReason: failureReason,
                 messageId: message.id,
               },
             });
-            await ctx.reply(`Video failed to download: ${err.message}`);
+            const debugChatId = config.get("debugChatId");
+            if (debugChatId) {
+              await ctx.telegram.sendMessage(
+                debugChatId,
+                `Video failed to download: ${failureReason}`,
+                { disable_notification: true, disable_web_page_preview: true }
+              );
+            }
+            await ctx.reply(
+              `${ctx.message.text}\n\nWritten by ${ctx.message.from.username}`
+            );
           }
         }
+      } else {
+        await ctx.reply("Bruv no URL was found", {
+          reply_to_message_id: ctx.message.message_id,
+        });
       }
     }
   });

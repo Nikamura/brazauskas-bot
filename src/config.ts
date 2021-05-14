@@ -21,6 +21,11 @@ export const config = convict({
     default: null,
     env: "BRAZAUSKAS_TELEGRAM_BOT_TOKEN",
   },
+  debugChatId: {
+    env: "BRAZAUSKAS_DEBUG_CHAT_ID",
+    default: null,
+    format: "String",
+  },
 });
 
 config.validate({ allowed: "strict" });

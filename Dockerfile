@@ -1,4 +1,4 @@
-FROM mikenye/youtube-dl:2021.04.07 as core
+FROM mikenye/youtube-dl:2021.04.26 as core
 
 RUN apt-get update && \
   apt-get install -y curl && \

@@ -1,7 +1,9 @@
 node_modules
 tmp
 dist
-.env
+.env*
+!.env.example
 yarn-error.log
 prisma/*.db
+prisma/*.db-journal
 config/
