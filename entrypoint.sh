@@ -1,7 +1,5 @@
 #!/bin/bash
 
-youtube-dl -U
-
-prisma migrate deploy
+yt-dlp -U
 
 exec "$@"

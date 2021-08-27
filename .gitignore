@@ -4,6 +4,5 @@ dist
 .env*
 !.env.example
 yarn-error.log
-prisma/*.db
-prisma/*.db-journal
 config/
+yt-dlp
