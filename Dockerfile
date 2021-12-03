@@ -1,4 +1,4 @@
-FROM mikenye/youtube-dl:2021.06.06 as core
+FROM mikenye/youtube-dl:latest as core
 
 RUN apt-get update && \
   apt-get install -y curl && \
@@ -22,7 +22,7 @@ WORKDIR /bot
 COPY --from=build /bot/dist ./
 COPY entrypoint.sh ./
 
-RUN curl -O -L https://github.com/yt-dlp/yt-dlp/releases/download/2021.08.10/yt-dlp && \
+RUN curl -O -L https://github.com/yt-dlp/yt-dlp/releases/download/2021.12.01/yt-dlp && \
   chmod +x yt-dlp && \
   ./yt-dlp -U
 

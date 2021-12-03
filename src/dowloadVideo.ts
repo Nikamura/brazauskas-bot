@@ -5,7 +5,7 @@ export function dowloadVideo(videoUrl: string): Promise<string> {
     const random = Math.floor(Math.random() * Math.floor(1000000));
 
     exec(
-      `yt-dlp -f 'bestvideo[ext=mp4][filesize<100M]+bestaudio[ext=m4a]/mp4' --output='tmp/${random}.mp4' ${videoUrl}`,
+      `yt-dlp -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4' --output='tmp/${random}.mp4' ${videoUrl}`,
       (error, stdout, stderr) => {
         if (error) {
           reject(`error: ${error.message}`);
