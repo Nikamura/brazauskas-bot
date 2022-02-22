@@ -4,22 +4,30 @@
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
-    "build": "rimraf dist && tsc --noEmit && ncc build src/cli.ts -o dist",
-    "dev": "tsnd --project tsconfig.dev.json --inspect --respawn src/cli.ts | pino-pretty"
+    "build": "rimraf dist && tsc --noEmit && ncc build --source-map src/cli.ts -o dist && yarn build:ombi",
+    "build:ombi": "rimraf dist-ombi && ncc build --source-map src/ombi_bot.ts -o dist-ombi",
+    "dev": "tsnd --project tsconfig.dev.json --respawn src/cli.ts | pino-pretty"
   },
   "dependencies": {
+    "@grammyjs/hydrate": "1.0.3",
+    "@grammyjs/runner": "1.0.3",
+    "@grammyjs/storage-deta": "1.0.2",
     "convict": "6.2.1",
-    "dotenv": "10.0.0",
-    "pino": "7.5.1",
-    "telegraf": "4.4.2"
+    "dotenv": "16.0.0",
+    "grammy": "1.7.0",
+    "node-fetch": "2.6.7",
+    "pino": "7.8.0",
+    "telegraf": "4.7.0"
   },
   "devDependencies": {
     "@types/convict": "6.1.1",
-    "@types/node": "16.11.11",
-    "@vercel/ncc": "0.33.0",
-    "pino-pretty": "7.2.0",
+    "@types/node": "17.0.18",
+    "@types/node-fetch": "2.6.1",
+    "@vercel/ncc": "0.33.3",
+    "nodemon": "2.0.15",
+    "pino-pretty": "7.5.1",
     "rimraf": "3.0.2",
     "ts-node-dev": "1.1.8",
-    "typescript": "4.5.2"
+    "typescript": "4.5.5"
   }
 }
