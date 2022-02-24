@@ -3,10 +3,9 @@ import dotenv from "dotenv";
 import { Bot, Context, GrammyError, HttpError, InlineKeyboard, session, SessionFlavor } from "grammy";
 import { run, sequentialize } from "@grammyjs/runner";
 import { DetaAdapter } from "@grammyjs/storage-deta";
-import { OmbiClient } from "./ombi_api";
 import { InlineQueryResultArticle } from "@grammyjs/types";
 import { hydrate, HydrateFlavor } from "@grammyjs/hydrate";
-
+import { Api as OmbiApi } from "./ombiApi";
 interface SessionData {
   counter: 0;
 }
@@ -22,7 +21,12 @@ function initial(): SessionData {
 
 async function main() {
   dotenv.config();
-  const ombi = new OmbiClient();
+  const ombiClient = new OmbiApi({
+    baseURL: process.env.OMBI_BASE_URL!,
+    headers: {
+      ApiKey: process.env.OMBI_TOKEN!,
+    },
+  });
   const bot = new Bot<MyContext>(process.env.CONTENT_TELEGRAM_BOT_TOKEN!);
   bot.use(sequentialize(getSessionKey));
   bot.use(
@@ -57,11 +61,12 @@ Tag the bot, specify type and search away\\.
     });
     const [, theMovieDbId] = ctx.message?.text?.split(" ", 3) ?? [];
     if (theMovieDbId && parseInt(theMovieDbId, 10).toString() === theMovieDbId) {
-      const movie = await ombi.movie(theMovieDbId);
+      const movie = (await ombiClient.api.v2SearchMovieDetail(parseInt(theMovieDbId, 10))).data;
       const replyKeyboard = new InlineKeyboard();
       if (!movie.requested || !movie.plexUrl) {
-        const request = await ombi.request("movie", theMovieDbId);
-        replyKeyboard.text(request.message).row();
+        const request = (await ombiClient.api.v1RequestMovieCreate({ theMovieDbId: parseInt(theMovieDbId, 10) })).data;
+        //  await ombi.request("movie", theMovieDbId);
+        if (request.message) replyKeyboard.text(request.message).row();
         replyKeyboard.url("Track download progress", "https://radarr.karolis.host/activity/queue");
       }
       if (movie.imdbId) {
@@ -71,7 +76,7 @@ Tag the bot, specify type and search away\\.
         replyKeyboard.url("Watch on Plex", movie.plexUrl);
       }
       await ctx.replyWithPhoto(`https://image.tmdb.org/t/p/original${movie.posterPath}`, {
-        caption: movie.title,
+        caption: movie.title ?? "Missing movie title",
         reply_markup: replyKeyboard,
       });
     } else {
@@ -85,11 +90,19 @@ Tag the bot, specify type and search away\\.
     });
     const [, tvDbId] = ctx.message?.text?.split(" ", 3) ?? [];
     if (tvDbId && parseInt(tvDbId, 10).toString() === tvDbId) {
-      const tvShow = await ombi.tv(tvDbId);
+      // const tvShow = await ombi.tv(tvDbId);
+      const tvShow = (await ombiClient.api.v2SearchTvDetail(tvDbId, tvDbId)).data;
+
       const replyKeyboard = new InlineKeyboard();
-      if (!tvShow.requested || !tvShow.plexUrl) {
-        const request = await ombi.request("tv", tvShow.theTvDbId);
-        replyKeyboard.text(request.message).row();
+      if ((!tvShow.requested || !tvShow.plexUrl) && tvShow.theMovieDbId) {
+        // const request = await ombi.request("tv", tvShow.theTvDbId);
+        const request = (
+          await ombiClient.api.v2RequestsTvCreate({
+            theMovieDbId: parseInt(tvShow.theMovieDbId, 10),
+          })
+        ).data;
+
+        if (request.message) replyKeyboard.text(request.message).row();
         replyKeyboard.url("Track download progress", "https://radarr.karolis.host/activity/queue");
       }
       if (tvShow.imdbId) {
@@ -98,8 +111,8 @@ Tag the bot, specify type and search away\\.
       if (tvShow.plexUrl) {
         replyKeyboard.url("Watch on Plex", tvShow.plexUrl);
       }
-      await ctx.replyWithPhoto(`https://image.tmdb.org/t/p/original${tvShow.images.original}`, {
-        caption: tvShow.title,
+      await ctx.replyWithPhoto(`https://image.tmdb.org/t/p/original${tvShow.images?.original}`, {
+        caption: tvShow.title ?? "Missing tv show title",
         reply_markup: replyKeyboard,
       });
     } else {
@@ -109,7 +122,15 @@ Tag the bot, specify type and search away\\.
 
   bot.inlineQuery(/movie (.*)/, async ctx => {
     const movieTitle = ctx.inlineQuery.query.replace("movie ", "");
-    const movies = await ombi.search(movieTitle, { movies: true, tvShows: false });
+    // const movies = await ombi.search(movieTitle, { movies: true, tvShows: false });
+    const movies = (
+      await ombiClient.api.v2SearchMultiCreate(movieTitle, {
+        movies: true,
+        tvShows: false,
+        music: false,
+        people: false,
+      })
+    ).data;
     if (movies.length === 0) {
       await ctx.answerInlineQuery([]);
     } else {
@@ -139,7 +160,14 @@ Tag the bot, specify type and search away\\.
 
   bot.inlineQuery(/tv (.*)/, async ctx => {
     const tvTitle = ctx.inlineQuery.query.replace("tv ", "");
-    const tvs = await ombi.search(tvTitle, { movies: false, tvShows: true });
+    const tvs = (
+      await ombiClient.api.v2SearchMultiCreate(tvTitle, {
+        movies: false,
+        tvShows: true,
+        music: false,
+        people: false,
+      })
+    ).data;
     if (tvs.length === 0) {
       await ctx.answerInlineQuery([]);
     } else {

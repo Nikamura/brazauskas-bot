@@ -5,13 +5,15 @@
   "license": "MIT",
   "scripts": {
     "build": "rimraf dist && tsc --noEmit && ncc build --source-map src/cli.ts -o dist && yarn build:ombi",
-    "build:ombi": "rimraf dist-ombi && ncc build --source-map src/ombi_bot.ts -o dist-ombi",
+    "build:ombi": "rimraf dist-ombi && yarn generate:client && ncc build --source-map src/ombi_bot.ts -o dist-ombi",
+    "generate:client": "npx swagger-typescript-api -p https://ombi.karolis.host/swagger/v1/swagger.json -o ./src -n ombiApi.ts --js --axios",
     "dev": "tsnd --project tsconfig.dev.json --respawn src/cli.ts | pino-pretty"
   },
   "dependencies": {
     "@grammyjs/hydrate": "1.0.3",
     "@grammyjs/runner": "1.0.3",
     "@grammyjs/storage-deta": "1.0.2",
+    "axios": "0.26.0",
     "convict": "6.2.1",
     "dotenv": "16.0.0",
     "grammy": "1.7.0",
