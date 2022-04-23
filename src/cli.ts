@@ -14,7 +14,9 @@ interface IClosableServer<TServer> {
 
 async function startBot(): Promise<IClosableServer<Telegraf>> {
   const logger = defaultLogger.child({ app: "bot" });
-  const bot = new Telegraf(config.get("telegramBotToken")!);
+  const bot = new Telegraf(config.get("telegramBotToken")!, {
+    telegram: { apiRoot: config.get("telegramApiUrl")! },
+  });
   await setupTelegram({ service: bot, logger });
   await bot.launch();
   return { server: bot, close: async (reason) => bot.stop(reason), logger };

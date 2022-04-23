@@ -26,6 +26,11 @@ export const config = convict({
     default: null,
     format: "String",
   },
+  telegramApiUrl: {
+    format: "String",
+    env: "BRAZAUSKAS_TELEGRAM_API_URL",
+    default: null,
+  },
 });
 
 config.validate({ allowed: "strict" });

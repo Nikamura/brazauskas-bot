@@ -18,23 +18,18 @@ export async function setupTelegram({ service: bot }: Service<Telegraf>) {
       if (videoUrls.length > 0) {
         for await (const videoUrl of videoUrls) {
           try {
-            await ctx.deleteMessage();
             if (command === "/dl") {
+              await ctx.replyWithChatAction("record_video");
               const videoPath = await dowloadVideo(videoUrl);
-              await ctx.replyWithVideo(
-                { source: readFileSync(videoPath) },
-                {
-                  caption: `${videoUrl} was requested by ${username}.`,
-                }
-              );
+              const source = readFileSync(videoPath);
+              await ctx.replyWithChatAction("upload_video");
+              await ctx.replyWithVideo({ source }, { reply_to_message_id: ctx.message.message_id });
             } else {
+              await ctx.replyWithChatAction("record_voice");
               const songPath = await downloadSong(videoUrl);
-              ctx.replyWithAudio(
-                { source: readFileSync(songPath) },
-                {
-                  caption: `${videoUrl} was requested by ${username}.`,
-                }
-              );
+              const source = readFileSync(songPath);
+              await ctx.replyWithChatAction("upload_voice");
+              ctx.replyWithAudio({ source }, { reply_to_message_id: ctx.message.message_id });
             }
           } catch (err) {
             const failureReason =

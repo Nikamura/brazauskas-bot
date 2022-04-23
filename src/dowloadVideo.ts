@@ -2,7 +2,7 @@ import { ChildProcess, exec } from "child_process";
 import { logger } from "./logger";
 
 export async function dowloadVideo(videoUrl: string): Promise<string> {
-  const random = Math.floor(Math.random() * Math.floor(1000000));
+  const random = Number(new Date());
   const command = `yt-dlp --recode-video mp4 -o "tmp/${random}.%(ext)s" ${videoUrl}`;
   logger.debug(`Executing command: ${command}`);
 
@@ -31,7 +31,7 @@ export async function dowloadVideo(videoUrl: string): Promise<string> {
 
 export function downloadSong(videoUrl: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const random = Math.floor(Math.random() * Math.floor(1000000));
+    const random = Number(new Date());
 
     exec(
       `yt-dlp --extract-audio --audio-format mp3 --embed-thumbnail --embed-metadata -o "tmp/${random}.%(ext)s" ${videoUrl}`,
